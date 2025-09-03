@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <simdjson.h>
 
 // Namespace aliases
 namespace beast = boost::beast;
@@ -113,6 +114,21 @@ private:
 
         // print the data we got
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
+
+        std::string json_data = beast::buffers_to_string(buffer_.data());
+
+        // create parser
+        simdjson::dom::parser parser;
+
+        try {
+            // parse incoming JSON data
+            simdjson::dom::element doc = parser.parse(json_data);
+
+            std::cout << doc << std::endl; // For testing, prints the JSON to the console
+            
+        } catch (const simdjson::simdjson_error& e) {
+            std::cerr << "simdjson Parse Error: " << e.what() << std::endl;
+        }
         // consume the buffer so it's ready for the next read
         buffer_.consume(buffer_.size());
         // keep reading

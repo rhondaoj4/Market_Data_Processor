@@ -7,6 +7,7 @@ using namespace std;
 //abstract class
 class IStrategy{
 
+public:
     //ensures correct destructor from a derived class is called
     virtual ~IStrategy() = default;
 

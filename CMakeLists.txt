@@ -9,8 +9,8 @@ find_package(Boost CONFIG REQUIRED COMPONENTS beast)
 find_package(simdjson CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-add_executable(Market_Data_Processor main.cpp)
-
+# add_executable(Market_Data_Processor main.cpp)
+add_executable(Market_Data_Processor main.cpp moving_average_strategy.cpp strategy_manager.cpp)
 # Link executable against required libraries
 target_link_libraries(Market_Data_Processor PRIVATE
     Boost::beast

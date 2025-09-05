@@ -7,6 +7,7 @@
 
 using namespace std;
 
+//Moving Average Crossover, Triangular Arbitrage, Momentum Following, Mean Reversion
 class StrategyManager{
     
 public:

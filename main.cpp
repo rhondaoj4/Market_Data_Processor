@@ -9,7 +9,7 @@
 #include <string>
 #include <simdjson.h>
 #include "strategy_manager.h"
-
+#include "moving_average_strategy.h"
 // Namespace aliases
 namespace beast = boost::beast;
 namespace http = beast::http;

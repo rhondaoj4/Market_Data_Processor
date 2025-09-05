@@ -6,11 +6,11 @@
 
 using namespace std;
 
-class MovingAverageCrossover : public IStrategy {
+class MovingAverageStrategy : public IStrategy {
 
 public:
 
-    MovingAverageCrossover();
+    MovingAverageStrategy();
 
     void on_market_data(const simdjson::dom::element &doc) override;
 

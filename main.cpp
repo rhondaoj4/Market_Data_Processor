@@ -121,26 +121,49 @@ private:
         if(ec == websocket::error::closed) return;
         if(ec) return fail(ec, "read");
 
-        // print the data we got
-        std::cout << beast::make_printable(buffer_.data()) << std::endl;
+        string json_data = beast::buffers_to_string(buffer_.data());
 
-        std::string json_data = beast::buffers_to_string(buffer_.data());
-
-        // create parser
         simdjson::dom::parser parser;
-
         try {
-            // parse incoming JSON data
             simdjson::dom::element doc = parser.parse(json_data);
 
-            std::cout << doc << std::endl; // For testing, prints the JSON to the console
-            
-        } catch (const simdjson::simdjson_error& e) {
-            std::cerr << "simdjson Parse Error: " << e.what() << std::endl;
+            // check for a trade stream by examining the "stream" field
+            auto stream_result = doc["stream"];
+            if (stream_result.is_string() && stream_result.get_string().value().ends_with("@trade")) {
+                
+                // safely access the "data" field
+                auto data_field_result = doc["data"];
+                
+                if (data_field_result.is_object()) {
+                    
+                    auto event_type_result = data_field_result["e"].get_string();
+                    
+                    // check if the get_string() operation was successful, which also means the element is a string
+                    if (event_type_result.error() == simdjson::SUCCESS && event_type_result.value() == "trade") {
+                        
+                        // cnversion to handle string values for price and quantity
+                        string_view symbol_view = (string) data_field_result["s"];
+                        string symbol_str(symbol_view);
+                        string_view price_str_view = data_field_result["p"];
+                        double price = std::stod(string(price_str_view));
+                        string_view quantity_str_view = data_field_result["q"];
+                        double quantity = std::stod(string(quantity_str_view));
+
+                        // create a new JSON object to pass to strategy manager with converted data
+                        simdjson::dom::object new_data_object;
+                        
+                        strategy_manager_.process_data(doc);
+                    }
+                }
+            } else {
+                // This handles non-trade messages gracefully
+                cout << "Ignoring non-trade event: " << json_data << endl;
+            }
+
+        } catch (const simdjson::simdjson_error &e) {
+            cerr << "simdjson Parse Error: " << e.what() << endl;
         }
 
-        simdjson::dom::element doc = parser.parse(json_data);
-        strategy_manager_.process_data(doc);
         // consume the buffer so it's ready for the next read
         buffer_.consume(buffer_.size());
         // keep reading
@@ -167,6 +190,8 @@ int main() {
     auto my_session = std::make_shared<session>(ioc, ctx);
     // instance of a strategy (first to implement)
     auto moving_average_strategy = std::make_shared<MovingAverageStrategy>();
+    //add strategy to strategy manager (TEST)
+    my_session->get_strategy_manager().add_strategy("moving_average",moving_average_strategy);
     // start the session
     my_session->run(host,port, target);
 

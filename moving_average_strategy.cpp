@@ -15,7 +15,7 @@ void MovingAverageStrategy::on_market_data(const simdjson::dom::element &doc){
 }
 
 void MovingAverageStrategy::on_tick(const std::string &symbol, double price, double quantity){
-    cout << "MA  Crossover received tick for " << symbol << " at price: " << price <<endl;
+    cout << "Moving Average Crossover received tick for " << symbol << " at price: " << price <<endl;
 
     // periods for slow and fast moving average
     const size_t SLOW_PERIOD = 10, FAST_PERIOD = 2;
@@ -56,7 +56,9 @@ void MovingAverageStrategy::on_tick(const std::string &symbol, double price, dou
             // update state for next tick
         fast_moving_average_ = new_fast_moving_avg;
         slow_moving_average_ = new_slow_moving_avg;
+
     }
 
     
 }
+

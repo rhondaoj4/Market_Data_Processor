@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <simdjson.h>
+#include "strategy_manager.h"
 
 // Namespace aliases
 namespace beast = boost::beast;
@@ -26,6 +27,8 @@ void fail(beast::error_code ec, const char *what) {
 
 class session : public std::enable_shared_from_this<session>
 {
+
+private:
     // get ip address
     tcp::resolver resolver_;
     // creating a websocket connection
@@ -34,8 +37,10 @@ class session : public std::enable_shared_from_this<session>
     beast::flat_buffer buffer_;
     std::string host_;
     std::string target_;
+    StrategyManager strategy_manager_;
 
 public:
+
     explicit session(net::io_context& ioc, ssl::context& ctx)
         // prevent race conditions
         : resolver_(net::make_strand(ioc))
@@ -47,6 +52,10 @@ public:
         host_ = host;
         target_ = target;
         resolver_.async_resolve(host, port, beast::bind_front_handler(&session::on_resolve, shared_from_this()));
+    }
+
+    StrategyManager &get_strategy_manager(){
+        return strategy_manager_;
     }
 
 private:
@@ -129,6 +138,9 @@ private:
         } catch (const simdjson::simdjson_error& e) {
             std::cerr << "simdjson Parse Error: " << e.what() << std::endl;
         }
+
+        simdjson::dom::element doc = parser.parse(json_data);
+        strategy_manager_.process_data(doc);
         // consume the buffer so it's ready for the next read
         buffer_.consume(buffer_.size());
         // keep reading
@@ -151,8 +163,12 @@ int main() {
     ctx.set_default_verify_paths();
     ctx.set_verify_mode(ssl::verify_peer);
 
+    // create sesion object using a shared_ptr
+    auto my_session = std::make_shared<session>(ioc, ctx);
+    // instance of a strategy (first to implement)
+    auto moving_average_strategy = std::make_shared<MovingAverageStrategy>();
     // start the session
-    std::make_shared<session>(ioc, ctx)->run(host, port, target);
+    my_session->run(host,port, target);
 
     // run the io_context, this will block until all work is done
     ioc.run();

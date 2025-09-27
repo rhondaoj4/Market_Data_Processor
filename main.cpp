@@ -37,6 +37,7 @@ private:
     beast::flat_buffer buffer_;
     std::string host_;
     std::string target_;
+    simdjson::dom::parser parser_;
     StrategyManager strategy_manager_;
 
 public:
@@ -123,9 +124,9 @@ private:
 
         string json_data = beast::buffers_to_string(buffer_.data());
 
-        simdjson::dom::parser parser;
+        
         try {
-            simdjson::dom::element doc = parser.parse(json_data);
+            simdjson::dom::element doc = parser_.parse(json_data);
 
             // check for a trade stream by examining the "stream" field
             auto stream_result = doc["stream"];
@@ -151,7 +152,6 @@ private:
 
                         // create a new JSON object to pass to strategy manager with converted data
                         simdjson::dom::object new_data_object;
-                        
                         strategy_manager_.process_data(doc);
                     }
                 }

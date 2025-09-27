@@ -3,8 +3,16 @@
 #include "strategy.h"
 #include "simdjson.h"
 #include <deque>
+#include <map>
+#include <string>
 
 using namespace std;
+
+struct SymbolData{
+    deque<double> price_history;
+    double fast_moving_average = 0.0;
+    double slow_moving_average = 0.0;
+};
 
 class MovingAverageStrategy : public IStrategy {
 
@@ -18,9 +26,7 @@ public:
 
 private:
 
-    // hold the state of this strategy
-    deque<double> price_history_;
-    double fast_moving_average_ = 0.0;
-    double slow_moving_average_ = 0.0;
+    // hold the state of this strategy. Each coin has it own history
+    map<string, SymbolData> symbol_data_;
 
 };
